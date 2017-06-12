@@ -5,6 +5,7 @@ ekyna/docker-nginx-proxy
 
 1. Clone and run this stack: 
 
+        git clone https://github.com/ekyna/docker-nginx-proxy.git
         cd ./docker-nginx-proxy
         docker-compose up -d
 
@@ -29,12 +30,12 @@ ekyna/docker-nginx-proxy
 
 3. Add your network to generator services:
 
-        docker network connect sample-network nginx-gen
-        docker network connect sample-network letsencrypt
+        docker network connect example-network nginx-gen
+        docker network connect example-network letsencrypt
 
 3. Run your website:
 
-       cd ./sample-website
+       cd ./example-website
        docker-compose up -d 
 
 #### Resources:
