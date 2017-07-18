@@ -2,9 +2,9 @@ version: "2"
 
 services:
   nginx:
-    restart: unless-stopped
+    restart: always
     image: nginx
-    container_name: nginx
+    container_name: ${COMPOSE_PROJECT_NAME}_nginx
     ports:
       - "80:80"
       - "443:443"
@@ -14,10 +14,10 @@ services:
       - "/usr/share/nginx/html"
       - "./volumes/certs:/etc/nginx/certs:ro"
 
-  nginx-gen:
-    restart: unless-stopped
+  generator:
+    restart: always
     image: jwilder/docker-gen
-    container_name: nginx-gen
+    container_name: ${COMPOSE_PROJECT_NAME}_generator
     volumes:
       - "/var/run/docker.sock:/tmp/docker.sock:ro"
       - "./volumes/proxy/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro"
@@ -26,9 +26,9 @@ services:
     entrypoint: /usr/local/bin/docker-gen -notify-sighup nginx -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
 
   letsencrypt:
-    restart: unless-stopped
+    restart: always
     image: jrcs/letsencrypt-nginx-proxy-companion
-    container_name: letsencrypt-nginx-proxy-companion
+    container_name: ${COMPOSE_PROJECT_NAME}_letsencrypt
     volumes_from:
       - nginx
     volumes:
