@@ -56,11 +56,6 @@ proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 
 # Mitigate httpoxy attack (see README for details)
 proxy_set_header Proxy "";
-
-# Proxy caching
-#proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=cache:100m inactive=24h max_size=2g;
-#proxy_cache_key "$scheme$host$request_uri";
-#proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
 {{ end }}
 
 server {
@@ -175,23 +170,6 @@ server {
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
 
-	#location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|svg)$ {
-	#	access_log off;
-	#	proxy_cache cache;
-	#	proxy_cache_valid 200 1d;
-	#	proxy_cache_valid 404 5m;
-    #
-	#	proxy_ignore_headers "Set-Cookie";
-	#	proxy_hide_header "Set-Cookie";
-    #
-	#	{{ if eq $proto "uwsgi" }}
-	#	include uwsgi_params;
-	#	uwsgi_pass {{ trim $proto }}://{{ trim $host }};
-	#	{{ else }}
-	#	proxy_pass {{ trim $proto }}://{{ trim $host }};
-	#	{{ end }}
-	#}
-
 	location / {
 		{{ if eq $proto "uwsgi" }}
 		include uwsgi_params;
@@ -225,23 +203,6 @@ server {
 	{{ else if (exists "/etc/nginx/vhost.d/default") }}
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
-
-	#location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|svg)$ {
-	#	access_log off;
-	#	proxy_cache cache;
-	#	proxy_cache_valid 200 1d;
-	#	proxy_cache_valid 404 5m;
-    #
-	#	proxy_ignore_headers "Set-Cookie";
-	#	proxy_hide_header "Set-Cookie";
-    #
-	#	{{ if eq $proto "uwsgi" }}
-	#	include uwsgi_params;
-	#	uwsgi_pass {{ trim $proto }}://{{ trim $host }};
-	#	{{ else }}
-	#	proxy_pass {{ trim $proto }}://{{ trim $host }};
-	#	{{ end }}
-	#}
 
 	location / {
 		{{ if eq $proto "uwsgi" }}

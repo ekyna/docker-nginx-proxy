@@ -1,4 +1,4 @@
 /.idea
-/volumes/certs/
-!/volumes/certs/.gitkeep
+/volumes/
+!/volumes/proxy/nginx.tmpl
 /docker_logs.txt
