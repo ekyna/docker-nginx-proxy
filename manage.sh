@@ -84,7 +84,7 @@ ProxyDown() {
 }
 
 Execute() {
-    if IsUpAndRunning "proxy_nginx"
+    if ! IsUpAndRunning "proxy_nginx"
     then
         printf "\e[31mNot up and running.\e[0m\n"
         exit 1
@@ -187,8 +187,7 @@ case $1 in
         CreateUser $2 $3
     ;;
     registry)
-        IsUpAndRunning "proxy_nginx"
-        if [[ $? -eq 0 ]]
+        if ! IsUpAndRunning "proxy_nginx"
         then
             printf "\e[31mProxy is not up.\e[0m\n"
             exit 1
