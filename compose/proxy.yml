@@ -21,7 +21,8 @@ services:
     networks:
       - proxy
     logging:
-      driver: "syslog"
+      driver: "json-file"
+      options: { max-size: "1m", max-file: "3" }
 
   generator:
     container_name: proxy_generator
