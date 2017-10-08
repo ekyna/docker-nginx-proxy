@@ -18,6 +18,9 @@ services:
       VIRTUAL_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_EMAIL: ${REGISTRY_EMAIL}
+    logging:
+      driver: "json-file"
+      options: { max-size: "1m", max-file: "3" }
 
   registry:
     container_name: registry_registry
@@ -38,3 +41,6 @@ services:
       REGISTRY_HTTP_SECRET: ${REGISTRY_SECRET}
       REGISTRY_HTTP_TLS_CERTIFICATE: /certs/${REGISTRY_HOST}/fullchain.pem
       REGISTRY_HTTP_TLS_KEY: /certs/${REGISTRY_HOST}/key.pem
+    logging:
+      driver: "json-file"
+      options: { max-size: "1m", max-file: "3" }
