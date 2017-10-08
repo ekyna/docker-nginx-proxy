@@ -1,6 +1,15 @@
 version: '2'
 
 services:
+  registry_web:
+    container_name: ${COMPOSE_PROJECT_NAME}_registry_web
+    image: nginx
+    restart: always
+    environment:
+      VIRTUAL_HOST: ${REGISTRY_HOST}
+      LETSENCRYPT_HOST: ${REGISTRY_HOST}
+      LETSENCRYPT_EMAIL: ${REGISTRY_EMAIL}
+
   registry:
     container_name: ${COMPOSE_PROJECT_NAME}_registry
     image: registry:2
@@ -18,6 +27,3 @@ services:
       REGISTRY_HTTP_SECRET: ${REGISTRY_SECRET}
       REGISTRY_HTTP_TLS_CERTIFICATE: /certs/${REGISTRY_HOST}/fullchain.pem
       REGISTRY_HTTP_TLS_KEY: /certs/${REGISTRY_HOST}/key.pem
-      LETSENCRYPT_HOST: ${REGISTRY_HOST}
-      LETSENCRYPT_EMAIL: ${REGISTRY_EMAIL}
-      VIRTUAL_HOST: ${REGISTRY_HOST}
