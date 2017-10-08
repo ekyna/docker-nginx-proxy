@@ -2,7 +2,7 @@
 
 if [[ ! -f "./.env" ]]
 then
-    printf "Please create the .env file based on .env.dist"
+    printf "\e[31mPlease create the .env file based on .env.dist\e[0m\n"
     exit
 fi
 
