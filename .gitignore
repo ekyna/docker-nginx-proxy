@@ -1,4 +1,5 @@
 /.idea
 /volumes/
 !/volumes/proxy/nginx.tmpl
+!/volumes/web
 /docker_logs.txt

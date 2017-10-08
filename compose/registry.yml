@@ -1,17 +1,26 @@
 version: '2'
 
+networks:
+  registry:
+    external:
+      name: "registry-network"
+
 services:
   registry_web:
-    container_name: ${COMPOSE_PROJECT_NAME}_registry_web
+    container_name: registry_web
     image: nginx
     restart: always
+    volumes:
+      - ../volumes/web:/usr/share/nginx/html:ro
+    networks:
+      - registry
     environment:
       VIRTUAL_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_EMAIL: ${REGISTRY_EMAIL}
 
   registry:
-    container_name: ${COMPOSE_PROJECT_NAME}_registry
+    container_name: registry_registry
     image: registry:2
     restart: always
     ports:
@@ -20,6 +29,8 @@ services:
       - ../volumes/registry:/var/lib/registry
       - ../volumes/certs:/certs:ro
       - ../volumes/auth:/auth:ro
+    networks:
+      - registry
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd

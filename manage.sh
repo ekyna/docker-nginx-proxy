@@ -12,7 +12,6 @@ echo "" > ${LOG_PATH}
 
 source ./.env
 
-if [[ "" == "${COMPOSE_PROJECT_NAME}" ]]; then printf "\e[31mCOMPOSE_PROJECT_NAME env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_HOST}" ]]; then printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"; exit; fi
@@ -25,14 +24,45 @@ Help() {
 IsUpAndRunning() {
     if [[ "$(docker ps | grep $1)" ]]
     then
-        return 1
+        return 0
     fi
-    return 0
+    return 1
+}
+
+NetworkExists() {
+    if [[ "$(docker network ls | grep $1)" ]]
+    then
+        return 0
+    fi
+    return 1
+}
+
+NetworkCreate() {
+    printf "Creating network \e[1;33m$1\e[0m ... "
+    if NetworkExists $1
+    then
+        printf "\e[36mexists\e[0m\n"
+    else
+        docker network create $1 >> ${LOG_PATH} 2>&1 \
+            && printf "\e[32mcreated\e[0m\n" \
+            || (printf "\e[31merror\e[0m\n" && exit 1)
+    fi
+}
+
+NetworkRemove() {
+    printf "Removing network \e[1;33m$1\e[0m ... "
+    if NetworkExists $1
+    then
+        docker network rm $1 >> ${LOG_PATH} 2>&1 \
+            && printf "\e[32mremoved\e[0m\n" \
+            || (printf "\e[31merror\e[0m\n" && exit 1)
+    else
+        printf "\e[35munknown\e[0m\n"
+    fi
 }
 
 ProxyUp() {
-    IsUpAndRunning "${COMPOSE_PROJECT_NAME}_nginx"
-    if [[ $? -eq 1 ]]
+    if IsUpAndRunning "proxy_nginx"
     then
         printf "\e[31mAlready up and running.\e[0m\n"
         exit 1
@@ -40,7 +70,7 @@ ProxyUp() {
 
     printf "Starting \e[1;33mproxy\e[0m ... "
     cd ${DIR} && \
-        docker-compose -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1 \
+        docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1 \
             && printf "\e[32mdone\e[0m\n" \
             || (printf "\e[31merror\e[0m\n" && exit 1)
 }
@@ -48,14 +78,13 @@ ProxyUp() {
 ProxyDown() {
     printf "Stopping \e[1;33mproxy\e[0m ... "
     cd ${DIR} && \
-        docker-compose -f ./compose/proxy.yml -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1 \
+        docker-compose -p proxy -f ./compose/proxy.yml -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1 \
             && printf "\e[32mdone\e[0m\n" \
             || (printf "\e[31merror\e[0m\n" && exit 1)
 }
 
 Execute() {
-    IsUpAndRunning "${COMPOSE_PROJECT_NAME}_nginx"
-    if [[ $? -eq 0 ]]
+    if IsUpAndRunning "proxy_nginx"
     then
         printf "\e[31mNot up and running.\e[0m\n"
         exit 1
@@ -63,19 +92,19 @@ Execute() {
 
     printf "Executing $1\n"
     printf "\n"
-    docker exec -it ${COMPOSE_PROJECT_NAME}_nginx $1
+    docker exec -it proxy_nginx $1
     printf "\n"
 }
 
 Connect() {
-    if [[ "$(docker network ls | grep $1)" == "" ]]
+    if NetworkExists $1
     then
+        docker network connect $1 proxy_nginx
+        docker network connect $1 proxy_generator
+    else
         printf "\e[31mNetwork '$1' does not exist.\e[0m\n"
         exit
     fi
-
-    docker network connect $1 ${COMPOSE_PROJECT_NAME}_nginx
-    docker network connect $1 ${COMPOSE_PROJECT_NAME}_generator
 }
 
 # ----------------------------- REGISTRY -----------------------------
@@ -93,8 +122,9 @@ CreateUser() {
     fi
 
     cd ${DIR}
-    mkdir ./volumes/auth
-    docker run --entrypoint htpasswd registry:2 -Bbn $1 $2 > ./volumes/auth/htpasswd
+    if [[ ! -d "./volumes/auth" ]]; then mkdir ./volumes/auth; fi
+    cd ${DIR} && \
+        docker run -d --rm --entrypoint htpasswd registry:2 -Bbn $1 $2 > ./volumes/auth/htpasswd
 }
 
 # RegistryUp
@@ -107,15 +137,14 @@ RegistryUp() {
 
     printf "Starting \e[1;33mregistry\e[0m ... "
     cd ${DIR} && \
-        docker-compose -f ./compose/registry.yml up -d >> ${LOG_PATH} 2>&1 \
+        docker-compose -p registry -f ./compose/registry.yml up -d >> ${LOG_PATH} 2>&1 \
             && printf "\e[32mdone\e[0m\n" \
             || (printf "\e[31merror\e[0m\n" && exit 1)
 }
 
 # RegistryDown
 RegistryDown() {
-    IsUpAndRunning "${COMPOSE_PROJECT_NAME}_registry"
-    if [[ $? -eq 0 ]]
+    if ! IsUpAndRunning "registry_registry"
     then
         printf "\e[31mRegistry are not up.\e[0m\n"
         exit 1
@@ -123,10 +152,21 @@ RegistryDown() {
 
     printf "Stopping \e[1;33mregistry\e[0m ... "
     cd ${DIR} && \
-        docker-compose -f ./compose/registry.yml down -v >> ${LOG_PATH} 2>&1 \
+        docker-compose -p registry -f ./compose/registry.yml down -v >> ${LOG_PATH} 2>&1 \
             && printf "\e[32mdone\e[0m\n" \
             || (printf "\e[31merror\e[0m\n" && exit 1)
 }
+
+# ----------------------------- INIT -----------------------------
+
+if ! NetworkExists proxy-network
+then
+    NetworkCreate proxy-network
+fi
+if ! NetworkExists registry-network
+then
+    NetworkCreate registry-network
+fi
 
 # ----------------------------- EXEC -----------------------------
 
@@ -147,7 +187,7 @@ case $1 in
         CreateUser $2 $3
     ;;
     registry)
-        IsUpAndRunning "${COMPOSE_PROJECT_NAME}_nginx"
+        IsUpAndRunning "proxy_nginx"
         if [[ $? -eq 0 ]]
         then
             printf "\e[31mProxy is not up.\e[0m\n"
