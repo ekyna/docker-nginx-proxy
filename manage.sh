@@ -12,26 +12,11 @@ echo "" > ${LOG_PATH}
 
 source ./.env
 
-if [[ "" == "${COMPOSE_PROJECT_NAME}" ]]
-then
-    printf "\e[31mCOMPOSE_PROJECT_NAME env variable is not set.\e[0m\n"
-    exit
-fi
-if [[ "" == "${REGISTRY_PORT}" ]]
-then
-    printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"
-    exit
-fi
-if [[ "" == "${REGISTRY_HOST}" ]]
-then
-    printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"
-    exit
-fi
-if [[ "" == "${REGISTRY_EMAIL}" ]]
-then
-    printf "\e[31mREGISTRY_EMAIL env variable is not set.\e[0m\n"
-    exit
-fi
+if [[ "" == "${COMPOSE_PROJECT_NAME}" ]]; then printf "\e[31mCOMPOSE_PROJECT_NAME env variable is not set.\e[0m\n"; exit; fi
+if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
+if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
+if [[ "" == "${REGISTRY_HOST}" ]]; then printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"; exit; fi
+if [[ "" == "${REGISTRY_EMAIL}" ]]; then printf "\e[31mREGISTRY_EMAIL env variable is not set.\e[0m\n"; exit; fi
 
 Help() {
     printf "\e[2m$1\e[0m\n";

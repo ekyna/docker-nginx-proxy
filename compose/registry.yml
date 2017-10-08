@@ -12,10 +12,11 @@ services:
       - ../volumes/certs:/certs:ro
       - ../volumes/auth:/auth:ro
     environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_HTTP_SECRET: ${REGISTRY_SECRET}
       REGISTRY_HTTP_TLS_CERTIFICATE: /certs/${REGISTRY_HOST}/fullchain.pem
       REGISTRY_HTTP_TLS_KEY: /certs/${REGISTRY_HOST}/key.pem
       LETSENCRYPT_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_EMAIL: ${REGISTRY_EMAIL}
-      REGISTRY_AUTH: htpasswd
-      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
-      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
