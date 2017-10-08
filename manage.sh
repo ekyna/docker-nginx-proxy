@@ -8,6 +8,7 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_PATH="$DIR/docker_logs.txt"
+echo "" > ${LOG_PATH}
 
 source ./.env
 
