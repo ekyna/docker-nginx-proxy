@@ -1,4 +1,5 @@
 /.idea
+/.env
 /volumes/
 !/volumes/proxy/nginx.tmpl
 !/volumes/web

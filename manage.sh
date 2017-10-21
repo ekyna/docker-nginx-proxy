@@ -12,6 +12,9 @@ echo "" > ${LOG_PATH}
 
 source ./.env
 
+if [[ "" == "${SYSLOG_HOST}" ]]; then printf "\e[31mSYSLOG_HOST env variable is not set.\e[0m\n"; exit; fi
+if [[ "" == "${SYSLOG_PORT}" ]]; then printf "\e[31mSYSLOG_PORT env variable is not set.\e[0m\n"; exit; fi
+if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_HOST}" ]]; then printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"; exit; fi
@@ -27,6 +30,14 @@ IsUpAndRunning() {
         return 0
     fi
     return 1
+}
+
+CheckProxyUpAndRunning() {
+    if ! IsUpAndRunning "proxy_nginx"
+    then
+        printf "\e[31mNot up and running.\e[0m\n"
+        exit 1
+    fi
 }
 
 NetworkExists() {
@@ -68,6 +79,11 @@ ProxyUp() {
         exit 1
     fi
 
+    if ! NetworkExists proxy_network
+    then
+        NetworkCreate proxy_network
+    fi
+
     printf "Starting \e[1;33mproxy\e[0m ... "
     cd ${DIR} && \
         docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1 \
@@ -84,11 +100,7 @@ ProxyDown() {
 }
 
 Execute() {
-    if ! IsUpAndRunning "proxy_nginx"
-    then
-        printf "\e[31mNot up and running.\e[0m\n"
-        exit 1
-    fi
+    CheckProxyUpAndRunning
 
     printf "Executing $1\n"
     printf "\n"
@@ -97,6 +109,8 @@ Execute() {
 }
 
 Connect() {
+    CheckProxyUpAndRunning
+
     if NetworkExists $1
     then
         docker network connect $1 proxy_nginx
@@ -110,6 +124,8 @@ Connect() {
 # ----------------------------- REGISTRY -----------------------------
 
 CreateUser() {
+    CheckProxyUpAndRunning
+
     if [[ "" == "$1" ]]
     then
         printf "\e[31mPlease provide a user name.\e[0m\n"
@@ -127,12 +143,18 @@ CreateUser() {
         docker run -d --rm --entrypoint htpasswd registry:2 -Bbn $1 $2 > ./volumes/auth/htpasswd
 }
 
-# RegistryUp
 RegistryUp() {
+    CheckProxyUpAndRunning
+
     if [[ ! -f "./volumes/auth/htpasswd" ]]
     then
         printf "\e[31mPlease run the create-user command first.\e[0m\n"
         exit
+    fi
+
+    if ! NetworkExists registry_network
+    then
+        NetworkCreate registry_network
     fi
 
     printf "Starting \e[1;33mregistry\e[0m ... "
@@ -142,7 +164,6 @@ RegistryUp() {
             || (printf "\e[31merror\e[0m\n" && exit 1)
 }
 
-# RegistryDown
 RegistryDown() {
     if ! IsUpAndRunning "registry_registry"
     then
@@ -156,17 +177,6 @@ RegistryDown() {
             && printf "\e[32mdone\e[0m\n" \
             || (printf "\e[31merror\e[0m\n" && exit 1)
 }
-
-# ----------------------------- INIT -----------------------------
-
-if ! NetworkExists proxy-network
-then
-    NetworkCreate proxy-network
-fi
-if ! NetworkExists registry-network
-then
-    NetworkCreate registry-network
-fi
 
 # ----------------------------- EXEC -----------------------------
 
@@ -187,12 +197,6 @@ case $1 in
         CreateUser $2 $3
     ;;
     registry)
-        if ! IsUpAndRunning "proxy_nginx"
-        then
-            printf "\e[31mProxy is not up.\e[0m\n"
-            exit 1
-        fi
-
         if [[ ! $2 =~ ^up|down$ ]]
         then
             printf "\e[31mExpected 'up' or 'down'\e[0m\n"
@@ -209,12 +213,12 @@ case $1 in
     *)
         Help "Usage:  ./manage.sh [action] [options]
 
- - \e[0mup\e[2m\t\t Start the proxy.
- - \e[0mdown\e[2m\t\t Stop the proxy.
- - \e[0mconnect\e[2m name\t Connect the proxy to [name] network.
- - \e[0mdump\e[2m name\t Dump nginx config.
- - \e[0mcreate-user\e[2m user pwd\t Create the registry user.
- - \e[0mregistry\e[2m up|down\t Start or stop the registry.
+    \e[0mup\e[2m                      Starts the proxy.
+    \e[0mdown\e[2m                    Stops the proxy.
+    \e[0mconnect\e[2m name            Connects the proxy to the [name] network.
+    \e[0mdump\e[2m                    Dumps the nginx config.
+    \e[0mcreate-user\e[2m user pwd    Creates the registry user.
+    \e[0mregistry\e[2m up|down        Starts or stops the registry.
 "
     ;;
 esac
