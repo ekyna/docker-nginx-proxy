@@ -1,6 +1,5 @@
 /.idea
 /.env
 /volumes/
-!/volumes/proxy/nginx.tmpl
-!/volumes/web
+!/volumes/.gitkeep
 /docker_logs.txt

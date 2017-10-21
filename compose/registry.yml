@@ -13,7 +13,7 @@ services:
     networks:
       - registry
     volumes:
-      - ../volumes/web:/usr/share/nginx/html:ro
+      - ../web/registry:/usr/share/nginx/html:ro
     environment:
       VIRTUAL_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_HOST: ${REGISTRY_HOST}
