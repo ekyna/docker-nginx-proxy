@@ -29,8 +29,9 @@ services:
       - proxy_html:/usr/share/nginx/html
       - ../volumes/certs:/etc/nginx/certs:ro
     logging:
-      driver: "json-file"
-      options: { max-size: "1m", max-file: "3" }
+      driver: syslog
+      options:
+        syslog-address: "tcp://${SYSLOG_HOST}:${SYSLOG_PORT}"
 
   generator:
     container_name: proxy_generator
@@ -47,9 +48,8 @@ services:
       - ../volumes/certs:/etc/nginx/certs:ro
       - ../volumes/proxy/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
     logging:
-      driver: syslog
-      options:
-        syslog-address: "tcp://${SYSLOG_HOST}:${SYSLOG_PORT}"
+      driver: "json-file"
+      options: { max-size: "1m", max-file: "3" }
 
   letsencrypt:
     container_name: proxy_letsencrypt
