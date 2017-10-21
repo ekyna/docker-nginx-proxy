@@ -7,6 +7,7 @@ networks:
 
 services:
   registry_web:
+    container_name: registry_web
     image: nginx
     restart: unless-stopped
     networks:
@@ -22,6 +23,7 @@ services:
       options: { max-size: "1m", max-file: "3" }
 
   registry:
+    container_name: registry_registry
     image: registry:2
     restart: unless-stopped
     environment:
