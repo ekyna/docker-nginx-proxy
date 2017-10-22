@@ -3,4 +3,4 @@
 /volumes/
 !/volumes/.gitkeep
 /docker_logs.txt
-/networks
+/networks.list

@@ -182,9 +182,8 @@ RegistryUp() {
     if ! NetworkExists registry_network
     then
         NetworkCreate registry_network
+        Connect registry_network
     fi
-
-    Connect registry_network
 
     printf "Starting \e[1;33mregistry\e[0m ... "
     cd ${DIR} && \
