@@ -132,23 +132,19 @@ Connect() {
         exit
     fi
 
-    if [[ -f ./networks.list ]];
-    then
-        if [[ "$(cat ./networks.list | grep ${NETWORK})" ]]
-        then
-            printf "\e[31mNetwork ${NETWORK} is already registered\e[0m\n"
-            exit
-        fi
-    fi
-
     printf "Connecting to \e[1;33m${NETWORK}\e[0m network ... "
 
     docker network connect ${NETWORK} proxy_nginx >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
     docker network connect ${NETWORK} proxy_generator >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
 
-    echo $1 >> ./networks.list
-
     printf "\e[32mdone\e[0m\n"
+
+    if [[ -f ./networks.list ]];
+    then
+        if [[ "$(cat ./networks.list | grep ${NETWORK})" ]]; then return 0; fi
+    fi
+
+    echo $1 >> ./networks.list
 }
 
 # ----------------------------- REGISTRY -----------------------------
