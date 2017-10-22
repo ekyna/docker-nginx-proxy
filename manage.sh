@@ -35,7 +35,7 @@ IsUpAndRunning() {
 CheckProxyUpAndRunning() {
     if ! IsUpAndRunning "proxy_nginx"
     then
-        printf "\e[31mNot up and running.\e[0m\n"
+        printf "\e[31mProxy is not up and running.\e[0m\n"
         exit 1
     fi
 }
@@ -124,8 +124,6 @@ Connect() {
 # ----------------------------- REGISTRY -----------------------------
 
 CreateUser() {
-    CheckProxyUpAndRunning
-
     if [[ "" == "$1" ]]
     then
         printf "\e[31mPlease provide a user name.\e[0m\n"
@@ -139,8 +137,7 @@ CreateUser() {
 
     cd ${DIR}
     if [[ ! -d "./volumes/auth" ]]; then mkdir ./volumes/auth; fi
-    cd ${DIR} && \
-        docker run -d --rm --entrypoint htpasswd registry:2 -Bbn $1 $2 > ./volumes/auth/htpasswd
+    docker run --rm --entrypoint htpasswd registry:2.5.2 -Bbn $1 $2 > ./volumes/auth/htpasswd
 }
 
 RegistryUp() {
@@ -148,13 +145,14 @@ RegistryUp() {
 
     if [[ ! -f "./volumes/auth/htpasswd" ]]
     then
-        printf "\e[31mPlease run the create-user command first.\e[0m\n"
+        printf "\e[31mPlease run './manage.sh create-user <name> <password>' command first.\e[0m\n"
         exit
     fi
 
     if ! NetworkExists registry_network
     then
         NetworkCreate registry_network
+        Connect registry_network
     fi
 
     printf "Starting \e[1;33mregistry\e[0m ... "
@@ -167,7 +165,7 @@ RegistryUp() {
 RegistryDown() {
     if ! IsUpAndRunning "registry_registry"
     then
-        printf "\e[31mRegistry are not up.\e[0m\n"
+        printf "\e[31mRegistry is not up and running.\e[0m\n"
         exit 1
     fi
 

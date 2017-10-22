@@ -176,9 +176,9 @@ server {
 	add_header Strict-Transport-Security "max-age=31536000";
 	{{ end }}
 
-    #limit_conn conn_limit_per_ip 10;
-    limit_req zone=req_limit_per_ip burst=10 nodelay;
-    limit_req zone=req_limit_per_server burst=20 nodelay;
+	#limit_conn conn_limit_per_ip 10;
+	limit_req zone=req_limit_per_ip burst=10 nodelay;
+	limit_req zone=req_limit_per_server burst=20 nodelay;
 
 	{{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
 	include {{ printf "/etc/nginx/vhost.d/%s" $host }};
@@ -215,8 +215,8 @@ server {
 	listen 80 {{ $default_server }};
 	access_log /var/log/nginx/access.log vhost if=$loggable;
 
-    limit_req zone=req_limit_per_ip burst=10 nodelay;
-    limit_req zone=req_limit_per_server burst=20 nodelay;
+	limit_req zone=req_limit_per_ip burst=10 nodelay;
+	limit_req zone=req_limit_per_server burst=20 nodelay;
 
 	{{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
 	include {{ printf "/etc/nginx/vhost.d/%s" $host }};
