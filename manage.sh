@@ -101,6 +101,9 @@ ProxyUp() {
                 Connect ${NETWORK}
             fi
         done < ./networks.list
+
+        sleep 1
+        docker restart proxy_nginx
     fi
 }
 
