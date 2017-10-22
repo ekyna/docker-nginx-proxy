@@ -8,7 +8,6 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_PATH="$DIR/docker_logs.txt"
-echo "" > ${LOG_PATH}
 
 source ./.env
 
@@ -19,6 +18,10 @@ if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env vari
 if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_HOST}" ]]; then printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_EMAIL}" ]]; then printf "\e[31mREGISTRY_EMAIL env variable is not set.\e[0m\n"; exit; fi
+
+# Clear logs
+echo "" > ${LOG_PATH}
+
 
 Help() {
     printf "\e[2m$1\e[0m\n";
@@ -89,6 +92,16 @@ ProxyUp() {
         docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1 \
             && printf "\e[32mdone\e[0m\n" \
             || (printf "\e[31merror\e[0m\n" && exit 1)
+
+    if [[ -f ./networks.list ]]
+    then
+        while IFS='' read -r NETWORK || [[ -n "$NETWORK" ]]; do
+            if [[ "" != "${NETWORK}" ]]
+            then
+                Connect ${NETWORK}
+            fi
+        done < ./networks.list
+    fi
 }
 
 ProxyDown() {
@@ -111,14 +124,31 @@ Execute() {
 Connect() {
     CheckProxyUpAndRunning
 
-    if NetworkExists $1
+    NETWORK="$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+    if ! NetworkExists ${NETWORK}
     then
-        docker network connect $1 proxy_nginx
-        docker network connect $1 proxy_generator
-    else
-        printf "\e[31mNetwork '$1' does not exist.\e[0m\n"
+        printf "\e[31mNetwork '${NETWORK}' does not exist.\e[0m\n"
         exit
     fi
+
+    if [[ -f ./networks.list ]];
+    then
+        if [[ "$(cat ./networks.list | grep ${NETWORK})" ]]
+        then
+            printf "\e[31mNetwork ${NETWORK} is already registered\e[0m\n"
+            exit
+        fi
+    fi
+
+    printf "Connecting to \e[1;33m${NETWORK} network\e[0m ... "
+
+    docker network connect ${NETWORK} proxy_nginx >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
+    docker network connect ${NETWORK} proxy_generator >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
+
+    echo $1 >> ./networks.list
+
+    printf "\e[32mdone\e[0m\n"
 }
 
 # ----------------------------- REGISTRY -----------------------------

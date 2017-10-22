@@ -15,13 +15,24 @@ ekyna/docker-nginx-proxy
         sudo cp ./etc/logrotate.d/docker /etc/logrotate.d/docker
         sudo service rsyslog restart
 
+Nginx proxy logs will be available in the file _/var/log/docker/proxy_nginx.log_.
+
+3. Copy _.env.dist_ to _.env_ and provide environment variables:
+
+        SYSLOG_HOST=12.34.56.78
+        SYSLOG_PORT=514
+        REGISTRY_SECRET=0123456789
+        REGISTRY_HOST=registry.example.org  # FQDN (used by proxy/letsencrypt)
+        REGISTRY_PORT=5000
+        REGISTRY_EMAIL=registry@example.org # Email for letsencrypt 
+
 3. Launch the proxy: 
 
         ./manage.sh up
 
 4. Configure your website: 
     
-    _example with docker composer v2_
+    _docker compose example_
 
         version: '3'
         networks:
@@ -50,7 +61,15 @@ ekyna/docker-nginx-proxy
 
 #### Registry 
 
-    TODO
+This repo embed a private secured (with letsencrypt) docker registry.
+
+Create a user for authentication: 
+
+    ./manage.sh create-user <user> <password>
+
+Launch the proxy:
+     
+    ./manage.sh registry up
 
 #### Fail2ban
 
