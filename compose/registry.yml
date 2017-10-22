@@ -24,7 +24,7 @@ services:
 
   registry:
     container_name: registry_registry
-    image: registry:2
+    image: registry:2.5.2
     restart: unless-stopped
     environment:
       REGISTRY_AUTH: htpasswd
