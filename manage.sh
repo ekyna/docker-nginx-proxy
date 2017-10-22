@@ -141,7 +141,7 @@ Connect() {
         fi
     fi
 
-    printf "Connecting to \e[1;33m${NETWORK} network\e[0m ... "
+    printf "Connecting to \e[1;33m${NETWORK}\e[0m network ... "
 
     docker network connect ${NETWORK} proxy_nginx >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
     docker network connect ${NETWORK} proxy_generator >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
