@@ -13,6 +13,13 @@ ekyna/docker-nginx-proxy
         sudo cp ./etc/rsyslog.d/10-docker-container.conf /etc/rsyslog.d/10-docker-container.conf
         sudo cp ./etc/rsyslog.d/11-docker-daemon.conf /etc/rsyslog.d/11-docker-daemon.conf
         sudo cp ./etc/logrotate.d/docker /etc/logrotate.d/docker
+        
+        sudo nano /etc/rsyslog.conf
+        
+            # Uncomment
+            $ModLoad imtcp
+            $InputTCPServerRun 514 
+        
         sudo service rsyslog restart
 
 Nginx proxy logs will be available in the file _/var/log/docker/proxy_nginx.log_.
@@ -25,6 +32,8 @@ Nginx proxy logs will be available in the file _/var/log/docker/proxy_nginx.log_
         REGISTRY_HOST=registry.example.org  # FQDN (used by proxy/letsencrypt)
         REGISTRY_PORT=5000
         REGISTRY_EMAIL=registry@example.org # Email for letsencrypt 
+
+    Get the docker host ip with ```ip route|awk '/default/ { print $3 }'``` from inside a container.
 
 3. Launch the proxy: 
 
