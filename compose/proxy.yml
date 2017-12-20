@@ -65,6 +65,7 @@ services:
       - proxy_vhostd:/etc/nginx/vhost.d
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ../volumes/certs:/etc/nginx/certs:rw
+      - ../web/nginx:/usr/share/nginx/html:rw
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
