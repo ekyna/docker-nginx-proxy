@@ -28,7 +28,7 @@ services:
       - proxy_confd:/etc/nginx/conf.d
       - proxy_vhostd:/etc/nginx/vhost.d
       - ../volumes/certs:/etc/nginx/certs:ro
-      - ../web/nginx:/usr/share/nginx/html:rw
+      - proxy_html:/usr/share/nginx/html
     logging:
       driver: syslog
       options:
@@ -45,9 +45,9 @@ services:
     volumes:
       - proxy_confd:/etc/nginx/conf.d
       - proxy_vhostd:/etc/nginx/vhost.d
+      - ../volumes/certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ../etc/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
-      - ../volumes/certs:/etc/nginx/certs:ro
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
@@ -57,6 +57,7 @@ services:
     image: jrcs/letsencrypt-nginx-proxy-companion
     restart: unless-stopped
     environment:
+      NGINX_PROXY_CONTAINER: proxy_nginx
       NGINX_DOCKER_GEN_CONTAINER: proxy_generator
     networks:
       - proxy
@@ -65,7 +66,6 @@ services:
       - proxy_vhostd:/etc/nginx/vhost.d
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ../volumes/certs:/etc/nginx/certs:rw
-      - ../web/nginx:/usr/share/nginx/html:rw
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
