@@ -28,7 +28,7 @@ services:
       - proxy_confd:/etc/nginx/conf.d
       - proxy_vhostd:/etc/nginx/vhost.d
       - ../volumes/certs:/etc/nginx/certs:ro
-      - ../web/nginx:/usr/share/nginx/html
+      - ../web/nginx:/usr/share/nginx/html:rw
     logging:
       driver: syslog
       options:
