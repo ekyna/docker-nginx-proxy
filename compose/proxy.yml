@@ -27,8 +27,8 @@ services:
       - ../etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - proxy_confd:/etc/nginx/conf.d
       - proxy_vhostd:/etc/nginx/vhost.d
-      - ../volumes/certs:/etc/nginx/certs:ro
       - proxy_html:/usr/share/nginx/html
+      - ../volumes/certs:/etc/nginx/certs:ro
     logging:
       driver: syslog
       options:
@@ -45,9 +45,10 @@ services:
     volumes:
       - proxy_confd:/etc/nginx/conf.d
       - proxy_vhostd:/etc/nginx/vhost.d
+      - proxy_html:/usr/share/nginx/html
       - ../volumes/certs:/etc/nginx/certs:ro
-      - /var/run/docker.sock:/tmp/docker.sock:ro
       - ../etc/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
@@ -64,8 +65,9 @@ services:
     volumes:
       - proxy_confd:/etc/nginx/conf.d
       - proxy_vhostd:/etc/nginx/vhost.d
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - proxy_html:/usr/share/nginx/html
       - ../volumes/certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
