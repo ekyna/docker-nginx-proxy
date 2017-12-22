@@ -58,8 +58,9 @@ proxy_set_header Proxy "";
 {{ end }}
 
 client_body_buffer_size  128k;
+client_max_body_size 16m;
 #client_header_buffer_size 3m;
-large_client_header_buffers 4 256k;
+large_client_header_buffers 4 4k;
 #client_body_timeout   3m;
 #client_header_timeout 3m;
 
