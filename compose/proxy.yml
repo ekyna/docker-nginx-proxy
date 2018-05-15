@@ -21,10 +21,10 @@ services:
         target: /etc/nginx/nginx.conf
         read_only: true
       - type: bind
-        source: /volumes/conf.d
+        source: ../volumes/conf.d
         target: /etc/nginx/conf.d
       - type: bind
-        source: /volumes/vhost.d
+        source: ../volumes/vhost.d
         target: /etc/nginx/vhost.d
       - type: bind
         source: ../volumes/html
@@ -48,10 +48,10 @@ services:
       - proxy
     volumes:
       - type: bind
-        source: /volumes/conf.d
+        source: ../volumes/conf.d
         target: /etc/nginx/conf.d
       - type: bind
-        source: /volumes/vhost.d
+        source: ../volumes/vhost.d
         target: /etc/nginx/vhost.d
       - type: bind
         source: ../volumes/certs
@@ -80,10 +80,10 @@ services:
       - proxy
     volumes:
       - type: bind
-        source: /volumes/conf.d
+        source: ../volumes/conf.d
         target: /etc/nginx/conf.d
       - type: bind
-        source: /volumes/vhost.d
+        source: ../volumes/vhost.d
         target: /etc/nginx/vhost.d
       - type: bind
         source: ../volumes/html
