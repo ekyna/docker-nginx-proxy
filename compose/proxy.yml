@@ -1,17 +1,9 @@
-version: '3'
+version: '3.2'
 
 networks:
   proxy:
     external:
       name: proxy_network
-
-volumes:
-  proxy_confd:
-    driver: local
-  proxy_vhostd:
-    driver: local
-  proxy_html:
-    driver: local
 
 services:
   nginx:
@@ -24,11 +16,23 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ../etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - proxy_confd:/etc/nginx/conf.d
-      - proxy_vhostd:/etc/nginx/vhost.d
-      - proxy_html:/usr/share/nginx/html
-      - ../volumes/certs:/etc/nginx/certs:ro
+      - type: bind
+        source: ../etc/nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: /volumes/conf.d
+        target: /etc/nginx/conf.d
+      - type: bind
+        source: /volumes/vhost.d
+        target: /etc/nginx/vhost.d
+      - type: bind
+        source: ../volumes/html
+        target: /usr/share/nginx/html
+      - type: bind
+        source: ../volumes/certs
+        target: /etc/nginx/certs
+        read_only: true
     logging:
       driver: syslog
       options:
@@ -43,12 +47,24 @@ services:
     networks:
       - proxy
     volumes:
-      - proxy_confd:/etc/nginx/conf.d
-      - proxy_vhostd:/etc/nginx/vhost.d
-      - proxy_html:/usr/share/nginx/html
-      - ../volumes/certs:/etc/nginx/certs:ro
-      - ../etc/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - type: bind
+        source: /volumes/conf.d
+        target: /etc/nginx/conf.d
+      - type: bind
+        source: /volumes/vhost.d
+        target: /etc/nginx/vhost.d
+      - type: bind
+        source: ../volumes/certs
+        target: /etc/nginx/certs
+        read_only: true
+      - type: bind
+        source: ../etc/nginx/nginx.tmpl
+        target: /etc/docker-gen/templates/nginx.tmpl
+        read_only: true
+      - type: bind
+        source: /var/run/docker.sock
+        target: /tmp/docker.sock
+        read_only: true
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
@@ -63,11 +79,22 @@ services:
     networks:
       - proxy
     volumes:
-      - proxy_confd:/etc/nginx/conf.d
-      - proxy_vhostd:/etc/nginx/vhost.d
-      - proxy_html:/usr/share/nginx/html
-      - ../volumes/certs:/etc/nginx/certs:rw
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - type: bind
+        source: /volumes/conf.d
+        target: /etc/nginx/conf.d
+      - type: bind
+        source: /volumes/vhost.d
+        target: /etc/nginx/vhost.d
+      - type: bind
+        source: ../volumes/html
+        target: /usr/share/nginx/html
+      - type: bind
+        source: ../volumes/certs
+        target: /etc/nginx/certs
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }

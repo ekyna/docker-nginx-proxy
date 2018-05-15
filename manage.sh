@@ -6,6 +6,8 @@ then
     exit
 fi
 
+export COMPOSE_CONVERT_WINDOWS_PATHS=1
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOG_PATH="$DIR/docker_logs.txt"
 
