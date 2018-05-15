@@ -219,8 +219,20 @@ case $1 in
     connect)
         Connect $2
     ;;
+    restart)
+        if ! IsUpAndRunning nginx
+        then
+            printf "\e[31mNot up and running.\e[0m\n"
+            exit 1
+        fi
+
+        docker restart proxy_nginx
+    ;;
+    test)
+        docker exec proxy_nginx nginx -t
+    ;;
     dump)
-        Execute "cat /etc/nginx/conf.d/default.conf"
+        cat ./volumes/conf.d/default.conf
     ;;
     create-user)
         CreateUser $2 $3
@@ -245,6 +257,8 @@ case $1 in
     \e[0mup\e[2m                      Starts the proxy.
     \e[0mdown\e[2m                    Stops the proxy.
     \e[0mconnect\e[2m name            Connects the proxy to the [name] network.
+    \e[0mrestart\e[2m                 Restarts the nginx container.
+    \e[0mtest\e[2m                    Tests the nginx config.
     \e[0mdump\e[2m                    Dumps the nginx config.
     \e[0mcreate-user\e[2m user pwd    Creates the registry user.
     \e[0mregistry\e[2m up|down        Starts or stops the registry.
