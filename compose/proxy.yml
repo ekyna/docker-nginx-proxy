@@ -76,6 +76,8 @@ services:
     environment:
       NGINX_PROXY_CONTAINER: proxy_nginx
       NGINX_DOCKER_GEN_CONTAINER: proxy_generator
+      REUSE_ACCOUNT_KEYS: true
+      REUSE_PRIVATE_KEYS: true
     networks:
       - proxy
     volumes:
