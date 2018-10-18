@@ -57,12 +57,8 @@ proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 proxy_set_header Proxy "";
 {{ end }}
 
-#client_body_buffer_size  128k;
-#client_max_body_size 16m;
-#client_header_buffer_size 3m;
-#large_client_header_buffers 4 4k;
-#client_body_timeout   3m;
-#client_header_timeout 3m;
+client_body_buffer_size       128k;
+large_client_header_buffers 4 256k;
 
 limit_req_zone $binary_remote_addr zone=req_limit_per_ip:1m rate=1r/s;
 limit_req_status 429;
@@ -72,6 +68,14 @@ server {
 	listen 80;
 	access_log /var/log/nginx/access.log vhost if=$loggable;
 	limit_req zone=req_limit_per_ip burst=1 nodelay;
+
+	root /etc/nginx/html/default;
+	index index.html;
+
+    location / {
+		try_files $uri $uri/ /index.html;
+	}
+
 	return 503;
 }
 
@@ -181,6 +185,31 @@ server {
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
 
+	location ~ /_uploader {
+		{{ if eq $proto "uwsgi" }}
+		include uwsgi_params;
+		uwsgi_pass {{ trim $proto }}://{{ trim $host }};
+		uwsgi_connect_timeout  10m;
+        uwsgi_send_timeout     10m;
+        uwsgi_read_timeout     10m;
+		{{ else }}
+		proxy_pass {{ trim $proto }}://{{ trim $host }};
+		proxy_connect_timeout  10m;
+        proxy_send_timeout     10m;
+        proxy_read_timeout     10m;
+		{{ end }}
+        send_timeout           10m;
+        client_max_body_size  256m;
+		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		auth_basic	"Restricted {{ $host }}";
+		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		{{ end }}
+		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
+		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
+		{{ else if (exists "/etc/nginx/vhost.d/default_location") }}
+		include /etc/nginx/vhost.d/default_location;
+		{{ end }}
+	}
 
 	location / {
 		{{ if eq $proto "uwsgi" }}
@@ -189,6 +218,7 @@ server {
 		{{ else }}
 		proxy_pass {{ trim $proto }}://{{ trim $host }};
 		{{ end }}
+        client_max_body_size 16m;
 		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
 		auth_basic	"Restricted {{ $host }}";
 		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
@@ -216,6 +246,32 @@ server {
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
 
+	location ~ /_uploader {
+		{{ if eq $proto "uwsgi" }}
+		include uwsgi_params;
+		uwsgi_pass {{ trim $proto }}://{{ trim $host }};
+		uwsgi_connect_timeout 10m;
+        uwsgi_send_timeout    10m;
+        uwsgi_read_timeout    10m;
+		{{ else }}
+		proxy_pass {{ trim $proto }}://{{ trim $host }};
+		proxy_connect_timeout 10m;
+        proxy_send_timeout    10m;
+        proxy_read_timeout    10m;
+		{{ end }}
+        send_timeout           10m;
+        client_max_body_size  256m;
+		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		auth_basic	"Restricted {{ $host }}";
+		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		{{ end }}
+		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
+		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
+		{{ else if (exists "/etc/nginx/vhost.d/default_location") }}
+		include /etc/nginx/vhost.d/default_location;
+		{{ end }}
+	}
+
 	location / {
 		{{ if eq $proto "uwsgi" }}
 		include uwsgi_params;
@@ -223,6 +279,7 @@ server {
 		{{ else }}
 		proxy_pass {{ trim $proto }}://{{ trim $host }};
 		{{ end }}
+        client_max_body_size 16m;
 		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
 		auth_basic	"Restricted {{ $host }}";
 		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
