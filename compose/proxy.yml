@@ -8,7 +8,7 @@ networks:
 services:
   nginx:
     container_name: proxy_nginx
-    image: stable-alpine
+    image: nginx:stable-alpine
     restart: unless-stopped
     networks:
       - proxy
