@@ -8,7 +8,7 @@ networks:
 services:
   nginx:
     container_name: proxy_nginx
-    image: nginx
+    image: stable-alpine
     restart: unless-stopped
     networks:
       - proxy
@@ -76,8 +76,8 @@ services:
     environment:
       NGINX_PROXY_CONTAINER: proxy_nginx
       NGINX_DOCKER_GEN_CONTAINER: proxy_generator
-      REUSE_ACCOUNT_KEYS: true
-      REUSE_PRIVATE_KEYS: true
+      REUSE_ACCOUNT_KEYS: 1
+      REUSE_PRIVATE_KEYS: 1
     networks:
       - proxy
     volumes:
