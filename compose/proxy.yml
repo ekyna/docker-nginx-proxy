@@ -34,10 +34,12 @@ services:
         target: /etc/nginx/certs
         read_only: true
     logging:
-      driver: syslog
-      options:
-        syslog-address: "tcp://${SYSLOG_HOST}:${SYSLOG_PORT}"
-        tag: "{{.DaemonName}}/{{.Name}}"
+      driver: "json-file"
+      options: { max-size: "1m", max-file: "3" }
+#      driver: syslog
+#      options:
+#        syslog-address: "tcp://${SYSLOG_HOST}:${SYSLOG_PORT}"
+#        tag: "{{.DaemonName}}/{{.Name}}"
 
   generator:
     container_name: proxy_generator
