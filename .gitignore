@@ -1,6 +1,14 @@
 /.idea
 /.env
-/volumes/
-!/volumes/.gitkeep
+/volumes/certs/
+!/volumes/certs/.gitkeep
+/volumes/conf.d/
+!/volumes/conf.d/.gitkeep
+/volumes/html/
+!/volumes/html/.gitkeep
+/volumes/registry/
+!/volumes/registry/.gitkeep
+/volumes/vhost.d/
+!/volumes/vhost.d/.gitkeep
 /docker_logs.txt
 /networks.list

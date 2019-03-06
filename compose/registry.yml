@@ -1,4 +1,4 @@
-version: '3.2'
+version: '2.2'
 
 networks:
   registry:
@@ -9,14 +9,15 @@ services:
   registry_web:
     container_name: registry_web
     image: nginx
-    restart: unless-stopped
+    restart: always
+    cpus: 0.1
+    mem_limit: 64M
+    depends_on:
+      - registry
     networks:
       - registry
     volumes:
-      - type: bind
-        source: ../web/registry
-        target: /usr/share/nginx/html
-        read_only: true
+      - ../web/registry:/usr/share/nginx/html:ro
     environment:
       VIRTUAL_HOST: ${REGISTRY_HOST}
       LETSENCRYPT_HOST: ${REGISTRY_HOST}
@@ -28,7 +29,9 @@ services:
   registry:
     container_name: registry_registry
     image: registry:2.5.2
-    restart: unless-stopped
+    restart: always
+    cpus: 0.1
+    mem_limit: 512M
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
@@ -41,17 +44,9 @@ services:
     ports:
       - "${REGISTRY_PORT}:5000"
     volumes:
-      - type: bind
-        source: ../volumes/registry
-        target: /var/lib/registry
-      - type: bind
-        source: ../volumes/certs
-        target: /certs
-        read_only: true
-      - type: bind
-        source: ../volumes/auth
-        target: /auth
-        read_only: true
+      - ../volumes/registry:/var/lib/registry:rw
+      - ../volumes/certs:/certs:ro
+      - ../volumes/auth:/auth:ro
     logging:
       driver: "json-file"
       options: { max-size: "1m", max-file: "3" }
