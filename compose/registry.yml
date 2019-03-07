@@ -6,12 +6,12 @@ networks:
       name: registry_network
 
 services:
-  registry_web:
+  web:
     container_name: registry_web
     image: nginx
     restart: always
     cpus: 0.1
-    mem_limit: 64M
+    mem_limit: 16M
     depends_on:
       - registry
     networks:
@@ -31,7 +31,7 @@ services:
     image: registry:2.5.2
     restart: always
     cpus: 0.1
-    mem_limit: 512M
+    mem_limit: 128M
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
