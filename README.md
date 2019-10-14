@@ -66,7 +66,18 @@ Nginx proxy logs will be available in the file _/var/log/docker/proxy_nginx.log_
 
        cd ./example-website
        docker-compose up -d 
-                  
+
+#### Letsencrypt DNS / OVH  
+
+Create these 3 files according to the [documentation](https://github.com/adferrand/docker-letsencrypt-dns#with-yaml-configuration-files).
+
+* ./volumes/dns/.env
+* ./volumes/dns/domains.conf
+* ./volumes/dns/lexicon.yml
+
+OVH Provider requires a token with full rights on _/domain/*_. 
+It can be generated for your OVH account on the following URL:
+`https://api.ovh.com/createToken/index.cgi?GET=/domain/*&PUT=/domain/*&POST=/domain/*&DELETE=/domain/*`
 
 #### Registry 
 

@@ -1,0 +1,26 @@
+version: '2.2'
+
+networks:
+    proxy:
+        external:
+            name: proxy_network
+
+services:
+    letsencrypt:
+        container_name: proxy_letsencrypt
+        image: adferrand/letsencrypt-dns
+        restart: always
+        cpus: 0.1
+        mem_limit: 64M
+        env_file:
+            - ../.dns.env
+        networks:
+            - proxy
+        volumes:
+            - ../volumes/certs/domains.conf:/etc/letsencrypt/domains.conf:ro
+            - ../volumes/certs/lexicon.yml:/etc/letsencrypt/lexicon.yml:ro
+            - ../volumes/certs:/etc/letsencrypt
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        logging:
+            driver: "json-file"
+            options: { max-size: "1m", max-file: "3" }

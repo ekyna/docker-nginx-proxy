@@ -1,0 +1,30 @@
+version: '2.2'
+
+networks:
+    proxy:
+        external:
+            name: proxy_network
+
+services:
+    letsencrypt:
+        container_name: proxy_letsencrypt
+        image: jrcs/letsencrypt-nginx-proxy-companion
+        restart: always
+        cpus: 0.1
+        mem_limit: 64M
+        environment:
+            NGINX_PROXY_CONTAINER: proxy_nginx
+            NGINX_DOCKER_GEN_CONTAINER: proxy_generator
+            REUSE_ACCOUNT_KEYS: 1
+            REUSE_PRIVATE_KEYS: 1
+        networks:
+            - proxy
+        volumes:
+            - ../volumes/conf.d:/etc/nginx/conf.d:rw
+            - ../volumes/vhost.d:/etc/nginx/vhost.d:rw
+            - ../volumes/html:/usr/share/nginx/html:rw
+            - ../volumes/certs:/etc/nginx/certs:rw
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        logging:
+            driver: "json-file"
+            options: { max-size: "1m", max-file: "3" }

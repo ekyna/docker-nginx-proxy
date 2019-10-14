@@ -1,5 +1,6 @@
 /.idea
 /.env
+/.dns.env
 /volumes/certs/
 !/volumes/certs/.gitkeep
 /volumes/conf.d/
