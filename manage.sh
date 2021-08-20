@@ -1,20 +1,19 @@
 #!/bin/bash
 
-if [[ ! -f "./.env" ]]
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit
+
+if [[ ! -f ".env" ]]
 then
     printf "\e[31mPlease create the .env file based on .env.dist\e[0m\n"
     exit
 fi
 
-export COMPOSE_CONVERT_WINDOWS_PATHS=1
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-LOG_PATH="$DIR/docker_logs.txt"
+LOG_PATH="docker_logs.txt"
 
 source ./.env
 
-if [[ "" == "${SYSLOG_HOST}" ]]; then printf "\e[31mSYSLOG_HOST env variable is not set.\e[0m\n"; exit; fi
-if [[ "" == "${SYSLOG_PORT}" ]]; then printf "\e[31mSYSLOG_PORT env variable is not set.\e[0m\n"; exit; fi
+#if [[ "" == "${SYSLOG_HOST}" ]]; then printf "\e[31mSYSLOG_HOST env variable is not set.\e[0m\n"; exit; fi
+#if [[ "" == "${SYSLOG_PORT}" ]]; then printf "\e[31mSYSLOG_PORT env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
@@ -26,11 +25,69 @@ echo "" > ${LOG_PATH}
 
 
 Help() {
-    printf "\e[2m$1\e[0m\n";
+    printf "\e[2m%s\e[0m\n" "$1"
+}
+
+Success() {
+    printf "\e[32m%s\e[0m\n" "$1"
+}
+
+Error() {
+    printf "\e[31m%s\e[0m\n" "$1"
+}
+
+DoneOrError() {
+    if [[ $1 -eq 0 ]]
+    then
+        Success 'done'
+    else
+        Error 'error'
+        exit 1
+    fi
+}
+
+NetworkExists() {
+    if docker network ls --format '{{.Name}}' | grep -q "$1\$"
+    then
+        return 0
+    fi
+    return 1
+}
+
+NetworkCreate() {
+    printf "Creating network \e[1;33m%s\e[0m ... " "$1"
+    if ! NetworkExists "$1"
+    then
+        if ! docker network create "$1" >> "${LOG_PATH}" 2>&1
+        then
+            Error "error"
+            exit 1
+        fi
+
+        Success "created"
+    else
+        Comment "exists"
+    fi
+}
+
+NetworkRemove() {
+    printf "Removing network \e[1;33m%s\e[0m ... " "$1"
+    if NetworkExists "$1"
+    then
+        if ! docker network rm "$1" >> "${LOG_PATH}" 2>&1
+        then
+            Error "error"
+            exit 1
+        fi
+
+        Success "removed"
+    else
+        Comment "unknown"
+    fi
 }
 
 IsUpAndRunning() {
-    if [[ "$(docker ps | grep $1)" ]]
+    if docker ps --format '{{.Names}}' | grep -q "$1\$"
     then
         return 0
     fi
@@ -45,38 +102,6 @@ CheckProxyUpAndRunning() {
     fi
 }
 
-NetworkExists() {
-    if [[ "$(docker network ls | grep $1)" ]]
-    then
-        return 0
-    fi
-    return 1
-}
-
-NetworkCreate() {
-    printf "Creating network \e[1;33m$1\e[0m ... "
-    if NetworkExists $1
-    then
-        printf "\e[36mexists\e[0m\n"
-    else
-        docker network create $1 >> ${LOG_PATH} 2>&1 \
-            && printf "\e[32mcreated\e[0m\n" \
-            || (printf "\e[31merror\e[0m\n" && exit 1)
-    fi
-}
-
-NetworkRemove() {
-    printf "Removing network \e[1;33m$1\e[0m ... "
-    if NetworkExists $1
-    then
-        docker network rm $1 >> ${LOG_PATH} 2>&1 \
-            && printf "\e[32mremoved\e[0m\n" \
-            || (printf "\e[31merror\e[0m\n" && exit 1)
-    else
-        printf "\e[35munknown\e[0m\n"
-    fi
-}
-
 ProxyUp() {
     if IsUpAndRunning "proxy_nginx"
     then
@@ -84,73 +109,64 @@ ProxyUp() {
         exit 1
     fi
 
-    if ! NetworkExists proxy_network
-    then
-        NetworkCreate proxy_network
-    fi
-
     printf "Starting \e[1;33mproxy\e[0m ... "
-    cd ${DIR} && \
-        docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1 \
-            && printf "\e[32mdone\e[0m\n" \
-            || (printf "\e[31merror\e[0m\n" && exit 1)
+    docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1
+    DoneOrError $?
 
-    if [[ -f ./networks.list ]]
-    then
-        while IFS='' read -r NETWORK || [[ -n "$NETWORK" ]]; do
-            if [[ "" != "${NETWORK}" ]]
-            then
-                Connect ${NETWORK}
-            fi
-        done < ./networks.list
-
-        sleep 1
-        docker restart proxy_nginx
-    fi
+#    if [[ -f ./networks.list ]]
+#    then
+#        while IFS='' read -r NETWORK || [[ -n "$NETWORK" ]]; do
+#            if [[ "" != "${NETWORK}" ]]
+#            then
+#                Connect ${NETWORK}
+#            fi
+#        done < ./networks.list
+#
+#        sleep 1
+#        docker restart proxy_nginx
+#    fi
 }
 
 ProxyDown() {
     printf "Stopping \e[1;33mproxy\e[0m ... "
-    cd ${DIR} && \
-        docker-compose -p proxy -f ./compose/proxy.yml -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1 \
-            && printf "\e[32mdone\e[0m\n" \
-            || (printf "\e[31merror\e[0m\n" && exit 1)
+    docker-compose -p proxy -f ./compose/proxy.yml -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1
+    DoneOrError $?
 }
 
 Execute() {
     CheckProxyUpAndRunning
 
-    printf "Executing $1\n"
+    printf "Executing %s\n" "$1"
     printf "\n"
-    docker exec -it proxy_nginx $1
+    docker exec -it proxy_nginx "$1"
     printf "\n"
 }
 
-Connect() {
-    CheckProxyUpAndRunning
-
-    NETWORK="$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-
-    if ! NetworkExists ${NETWORK}
-    then
-        printf "\e[31mNetwork '${NETWORK}' does not exist.\e[0m\n"
-        exit
-    fi
-
-    printf "Connecting to \e[1;33m${NETWORK}\e[0m network ... "
-
-    docker network connect ${NETWORK} proxy_nginx >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
-    docker network connect ${NETWORK} proxy_generator >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
-
-    printf "\e[32mdone\e[0m\n"
-
-    if [[ -f ./networks.list ]];
-    then
-        if [[ "$(cat ./networks.list | grep ${NETWORK})" ]]; then return 0; fi
-    fi
-
-    echo $1 >> ./networks.list
-}
+#Connect() {
+#    CheckProxyUpAndRunning
+#
+#    NETWORK="$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+#
+#    if ! NetworkExists ${NETWORK}
+#    then
+#        printf "\e[31mNetwork '${NETWORK}' does not exist.\e[0m\n"
+#        exit
+#    fi
+#
+#    printf "Connecting to \e[1;33m${NETWORK}\e[0m network ... "
+#
+#    docker network connect ${NETWORK} proxy_nginx >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
+#    docker network connect ${NETWORK} proxy_generator >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
+#
+#    printf "\e[32mdone\e[0m\n"
+#
+#    if [[ -f ./networks.list ]];
+#    then
+#        if [[ "$(cat ./networks.list | grep ${NETWORK})" ]]; then return 0; fi
+#    fi
+#
+#    echo $1 >> ./networks.list
+#}
 
 # ----------------------------- REGISTRY -----------------------------
 
@@ -166,9 +182,8 @@ CreateUser() {
         exit
     fi
 
-    cd ${DIR}
-    if [[ ! -d "./volumes/auth" ]]; then mkdir ./volumes/auth; fi
-    docker run --rm --entrypoint htpasswd registry:2.5.2 -Bbn $1 $2 > ./volumes/auth/htpasswd
+    docker run --rm --entrypoint htpasswd "registry:${REGISTRY_VERSION}" -Bbn "$1" "$2" > ./volumes/auth/htpasswd
+    DoneOrError $?
 }
 
 RegistryUp() {
@@ -183,14 +198,12 @@ RegistryUp() {
     if ! NetworkExists registry_network
     then
         NetworkCreate registry_network
-        Connect registry_network
+#        Connect registry_network
     fi
 
     printf "Starting \e[1;33mregistry\e[0m ... "
-    cd ${DIR} && \
-        docker-compose -p registry -f ./compose/registry.yml up -d >> ${LOG_PATH} 2>&1 \
-            && printf "\e[32mdone\e[0m\n" \
-            || (printf "\e[31merror\e[0m\n" && exit 1)
+    docker-compose -p registry -f ./compose/registry.yml up -d >> ${LOG_PATH} 2>&1
+    DoneOrError $?
 }
 
 RegistryDown() {
@@ -201,10 +214,8 @@ RegistryDown() {
     fi
 
     printf "Stopping \e[1;33mregistry\e[0m ... "
-    cd ${DIR} && \
-        docker-compose -p registry -f ./compose/registry.yml down -v >> ${LOG_PATH} 2>&1 \
-            && printf "\e[32mdone\e[0m\n" \
-            || (printf "\e[31merror\e[0m\n" && exit 1)
+    docker-compose -p registry -f ./compose/registry.yml down -v >> ${LOG_PATH} 2>&1
+    DoneOrError $?
 }
 
 # ----------------------------- EXEC -----------------------------

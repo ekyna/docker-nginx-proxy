@@ -1,5 +1,7 @@
 /.idea
 /.env
+/volumes/auth/
+!/volumes/auth/.gitkeep
 /volumes/certs/
 !/volumes/certs/.gitkeep
 /volumes/conf.d/
@@ -11,4 +13,4 @@
 /volumes/vhost.d/
 !/volumes/vhost.d/.gitkeep
 /docker_logs.txt
-/networks.list
+#/networks.list
