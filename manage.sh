@@ -12,8 +12,6 @@ LOG_PATH="docker_logs.txt"
 
 source ./.env
 
-#if [[ "" == "${SYSLOG_HOST}" ]]; then printf "\e[31mSYSLOG_HOST env variable is not set.\e[0m\n"; exit; fi
-#if [[ "" == "${SYSLOG_PORT}" ]]; then printf "\e[31mSYSLOG_PORT env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
 if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
@@ -113,18 +111,18 @@ ProxyUp() {
     docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1
     DoneOrError $?
 
-#    if [[ -f ./networks.list ]]
-#    then
-#        while IFS='' read -r NETWORK || [[ -n "$NETWORK" ]]; do
-#            if [[ "" != "${NETWORK}" ]]
-#            then
-#                Connect ${NETWORK}
-#            fi
-#        done < ./networks.list
-#
-#        sleep 1
-#        docker restart proxy_nginx
-#    fi
+    if [[ -f ./networks.list ]]
+    then
+        while IFS='' read -r NETWORK || [[ -n "$NETWORK" ]]; do
+            if [[ "" != "${NETWORK}" ]]
+            then
+                Connect "${NETWORK}"
+            fi
+        done < ./networks.list
+
+        sleep 1
+        docker restart proxy_nginx
+    fi
 }
 
 ProxyDown() {
@@ -142,31 +140,31 @@ Execute() {
     printf "\n"
 }
 
-#Connect() {
-#    CheckProxyUpAndRunning
-#
-#    NETWORK="$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-#
-#    if ! NetworkExists ${NETWORK}
-#    then
-#        printf "\e[31mNetwork '${NETWORK}' does not exist.\e[0m\n"
-#        exit
-#    fi
-#
-#    printf "Connecting to \e[1;33m${NETWORK}\e[0m network ... "
-#
-#    docker network connect ${NETWORK} proxy_nginx >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
-#    docker network connect ${NETWORK} proxy_generator >> ${LOG_PATH} 2>&1 || (printf "\e[31merror\e[0m\n" && exit 1)
-#
-#    printf "\e[32mdone\e[0m\n"
-#
-#    if [[ -f ./networks.list ]];
-#    then
-#        if [[ "$(cat ./networks.list | grep ${NETWORK})" ]]; then return 0; fi
-#    fi
-#
-#    echo $1 >> ./networks.list
-#}
+Connect() {
+    CheckProxyUpAndRunning
+
+    NETWORK="$(echo -e "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+    if ! NetworkExists "${NETWORK}"
+    then
+        printf "\e[31mNetwork '%s' does not exist.\e[0m\n" "${NETWORK}"
+        exit
+    fi
+
+    printf "Connecting to \e[1;33m%s\e[0m network ... " "${NETWORK}"
+
+    (docker network connect "${NETWORK}" proxy_nginx >> ${LOG_PATH} 2>&1) || (printf "\e[31merror\e[0m\n" && exit 1)
+    (docker network connect "${NETWORK}" proxy_generator >> ${LOG_PATH} 2>&1) || (printf "\e[31merror\e[0m\n" && exit 1)
+
+    printf "\e[32mdone\e[0m\n"
+
+    if [[ -f ./networks.list ]];
+    then
+        if grep -q "${NETWORK}" < ./networks.list; then return 0; fi
+    fi
+
+    echo "$1" >> ./networks.list
+}
 
 # ----------------------------- REGISTRY -----------------------------
 
@@ -228,7 +226,7 @@ case $1 in
         ProxyDown
     ;;
     connect)
-        Connect $2
+        Connect "$2"
     ;;
     restart)
         if ! IsUpAndRunning nginx
@@ -246,7 +244,7 @@ case $1 in
         cat ./volumes/conf.d/default.conf
     ;;
     create-user)
-        CreateUser $2 $3
+        CreateUser "$2" "$3"
     ;;
     registry)
         if [[ ! $2 =~ ^up|down$ ]]
