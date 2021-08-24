@@ -261,7 +261,7 @@ case $1 in
         fi
     ;;
     *)
-        Help "Usage:  ./manage.sh [action] [options]
+        printf "\e[2mUsage:  ./manage.sh [action] [options]
 
     \e[0mup\e[2m                      Starts the proxy.
     \e[0mdown\e[2m                    Stops the proxy.
@@ -271,7 +271,7 @@ case $1 in
     \e[0mdump\e[2m                    Dumps the nginx config.
     \e[0mcreate-user\e[2m user pwd    Creates the registry user.
     \e[0mregistry\e[2m up|down        Starts or stops the registry.
-"
+\e[0m\n"
     ;;
 esac
 
