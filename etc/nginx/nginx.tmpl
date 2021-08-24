@@ -332,6 +332,46 @@ server {
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
 
+	location ~ /_uploader {
+		{{ if eq $proto "uwsgi" }}
+		include uwsgi_params;
+		uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }};
+		uwsgi_connect_timeout  10m;
+        uwsgi_send_timeout     10m;
+        uwsgi_read_timeout     10m;
+		{{ else if eq $proto "fastcgi" }}
+		root   {{ trim $vhost_root }};
+		include fastcgi_params;
+		fastcgi_pass {{ trim $upstream_name }};
+		fastcgi_connect_timeout  10m;
+        fastcgi_send_timeout     10m;
+        fastcgi_read_timeout     10m;
+		{{ else if eq $proto "grpc" }}
+		grpc_pass {{ trim $proto }}://{{ trim $upstream_name }};
+		grpc_connect_timeout  10m;
+        grpc_send_timeout     10m;
+        grpc_read_timeout     10m;
+		{{ else }}
+		proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
+		proxy_connect_timeout  10m;
+        proxy_send_timeout     10m;
+        proxy_read_timeout     10m;
+		{{ end }}
+        send_timeout           10m;
+        client_max_body_size  256m;
+
+		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		auth_basic	"Restricted {{ $host }}";
+		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		{{ end }}
+
+		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
+		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
+		{{ else if (exists "/etc/nginx/vhost.d/default_location") }}
+		include /etc/nginx/vhost.d/default_location;
+		{{ end }}
+	}
+
 	location / {
 		{{ if eq $proto "uwsgi" }}
 		include uwsgi_params;
@@ -350,6 +390,7 @@ server {
 		auth_basic	"Restricted {{ $host }}";
 		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
 		{{ end }}
+
 		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
 		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
 		{{ else if (exists "/etc/nginx/vhost.d/default_location") }}
@@ -384,6 +425,46 @@ server {
 	include /etc/nginx/vhost.d/default;
 	{{ end }}
 
+	location ~ /_uploader {
+		{{ if eq $proto "uwsgi" }}
+		include uwsgi_params;
+		uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }};
+		uwsgi_connect_timeout 10m;
+        uwsgi_send_timeout    10m;
+        uwsgi_read_timeout    10m;
+		{{ else if eq $proto "fastcgi" }}
+		root   {{ trim $vhost_root }};
+		include fastcgi_params;
+		fastcgi_pass {{ trim $upstream_name }};
+		fastcgi_connect_timeout 10m;
+        fastcgi_send_timeout    10m;
+        fastcgi_read_timeout    10m;
+		{{ else if eq $proto "grpc" }}
+		grpc_pass {{ trim $proto }}://{{ trim $upstream_name }};
+		grpc_connect_timeout 10m;
+        grpc_send_timeout    10m;
+        grpc_read_timeout    10m;
+		{{ else }}
+		proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
+		proxy_connect_timeout 10m;
+        proxy_send_timeout    10m;
+        proxy_read_timeout    10m;
+		{{ end }}
+        send_timeout           10m;
+        client_max_body_size  256m;
+
+		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		auth_basic	"Restricted {{ $host }}";
+		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		{{ end }}
+
+		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
+		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
+		{{ else if (exists "/etc/nginx/vhost.d/default_location") }}
+		include /etc/nginx/vhost.d/default_location;
+		{{ end }}
+	}
+
 	location / {
 		{{ if eq $proto "uwsgi" }}
 		include uwsgi_params;
@@ -397,10 +478,12 @@ server {
 		{{ else }}
 		proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
 		{{ end }}
+
 		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
 		auth_basic	"Restricted {{ $host }}";
 		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
 		{{ end }}
+
 		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
 		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
 		{{ else if (exists "/etc/nginx/vhost.d/default_location") }}
