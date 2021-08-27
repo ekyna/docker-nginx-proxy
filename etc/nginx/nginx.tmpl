@@ -522,8 +522,7 @@ server {
 {{ $first_host := trim $first_host }}
 
 # First Host {{ $first_host }}
-
-#Alias:  {{ $host_alias }}
+# Alias      {{ $host_alias }}
 
 {{ $default_host := or ($.Env.DEFAULT_HOST) "" }}
 {{ $default_server := index (dict $host_alias "" $default_host "default_server") $host_alias }}
@@ -641,6 +640,7 @@ server {
     # Do not HTTPS redirect Let'sEncrypt ACME challenge
     location /.well-known/acme-challenge/ {
         auth_basic off;
+        auth_request off;
         allow all;
         root /usr/share/nginx/html;
         try_files $uri =404;
