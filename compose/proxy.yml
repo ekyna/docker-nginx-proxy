@@ -62,7 +62,6 @@ services:
       - ../volumes/conf.d:/etc/nginx/conf.d:rw
       - ../volumes/vhost.d:/etc/nginx/vhost.d:rw
       - ../volumes/html:/usr/share/nginx/html:rw
-      - ../volumes/certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     logging:
       driver: "json-file"
