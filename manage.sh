@@ -12,15 +12,14 @@ LOG_PATH="docker_logs.txt"
 
 source ./.env
 
-if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
-if [[ "" == "${REGISTRY_SECRET}" ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
-if [[ "" == "${REGISTRY_PORT}" ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
-if [[ "" == "${REGISTRY_HOST}" ]]; then printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"; exit; fi
-if [[ "" == "${REGISTRY_EMAIL}" ]]; then printf "\e[31mREGISTRY_EMAIL env variable is not set.\e[0m\n"; exit; fi
+if [[ -z ${REGISTRY_VERSION+x} ]]; then printf "\e[31mREGISTRY_VERSION env variable is not set.\e[0m\n"; exit; fi
+if [[ -z ${REGISTRY_SECRET+x} ]]; then printf "\e[31mREGISTRY_SECRET env variable is not set.\e[0m\n"; exit; fi
+if [[ -z ${REGISTRY_HOST+x} ]]; then printf "\e[31mREGISTRY_HOST env variable is not set.\e[0m\n"; exit; fi
+if [[ -z ${REGISTRY_PORT+x} ]]; then printf "\e[31mREGISTRY_PORT env variable is not set.\e[0m\n"; exit; fi
+if [[ -z ${REGISTRY_EMAIL+x} ]]; then printf "\e[31mREGISTRY_EMAIL env variable is not set.\e[0m\n"; exit; fi
 
 # Clear logs
 echo "" > ${LOG_PATH}
-
 
 Help() {
     printf "\e[2m%s\e[0m\n" "$1"
@@ -93,7 +92,7 @@ IsUpAndRunning() {
 }
 
 CheckProxyUpAndRunning() {
-    if ! IsUpAndRunning "proxy_nginx"
+    if ! IsUpAndRunning proxy_nginx
     then
         printf "\e[31mProxy is not up and running.\e[0m\n"
         exit 1
@@ -101,14 +100,14 @@ CheckProxyUpAndRunning() {
 }
 
 ProxyUp() {
-    if IsUpAndRunning "proxy_nginx"
+    if IsUpAndRunning proxy_nginx
     then
         printf "\e[31mAlready up and running.\e[0m\n"
         exit 1
     fi
 
     printf "Starting \e[1;33mproxy\e[0m ... "
-    docker-compose -p proxy -f ./compose/proxy.yml up -d >> ${LOG_PATH} 2>&1
+    docker-compose -p proxy -f ./compose/proxy.yml --env-file=.env up -d >> ${LOG_PATH} 2>&1
     DoneOrError $?
 
     if [[ -f ./networks.list ]]
@@ -127,7 +126,7 @@ ProxyUp() {
 
 ProxyDown() {
     printf "Stopping \e[1;33mproxy\e[0m ... "
-    docker-compose -p proxy -f ./compose/proxy.yml -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1
+    docker-compose -p proxy -f ./compose/proxy.yml --env-file=.env -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1
     DoneOrError $?
 }
 
@@ -200,7 +199,7 @@ RegistryUp() {
     fi
 
     printf "Starting \e[1;33mregistry\e[0m ... "
-    docker-compose -p registry -f ./compose/registry.yml up -d >> ${LOG_PATH} 2>&1
+    docker-compose -p registry -f ./compose/registry.yml --env-file=.env up -d >> ${LOG_PATH} 2>&1
     DoneOrError $?
 }
 
@@ -212,7 +211,7 @@ RegistryDown() {
     fi
 
     printf "Stopping \e[1;33mregistry\e[0m ... "
-    docker-compose -p registry -f ./compose/registry.yml down -v >> ${LOG_PATH} 2>&1
+    docker-compose -p registry -f ./compose/registry.yml --env-file=.env down -v >> ${LOG_PATH} 2>&1
     DoneOrError $?
 }
 

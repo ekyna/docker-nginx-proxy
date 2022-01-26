@@ -13,4 +13,4 @@
 /volumes/vhost.d/
 !/volumes/vhost.d/.gitkeep
 /docker_logs.txt
-#/networks.list
+/networks.list
