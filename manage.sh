@@ -126,7 +126,7 @@ ProxyUp() {
 
 ProxyDown() {
     printf "Stopping \e[1;33mproxy\e[0m ... "
-    docker-compose -p proxy -f ./compose/proxy.yml --env-file=.env -f ./compose/registry.yml down -v --remove-orphans >> ${LOG_PATH} 2>&1
+    docker-compose -p proxy -f ./compose/proxy.yml --env-file=.env -f ./compose/registry.yml down --remove-orphans >> ${LOG_PATH} 2>&1
     DoneOrError $?
 }
 
@@ -211,7 +211,7 @@ RegistryDown() {
     fi
 
     printf "Stopping \e[1;33mregistry\e[0m ... "
-    docker-compose -p registry -f ./compose/registry.yml --env-file=.env down -v >> ${LOG_PATH} 2>&1
+    docker-compose -p registry -f ./compose/registry.yml --env-file=.env down >> ${LOG_PATH} 2>&1
     DoneOrError $?
 }
 
