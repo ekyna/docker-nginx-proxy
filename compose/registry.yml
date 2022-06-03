@@ -1,9 +1,9 @@
-version: '3.4'
+version: '3.9'
 
 networks:
   registry:
-    external:
-      name: registry_network
+    name: registry_network
+    external: true
 
 services:
   web:
