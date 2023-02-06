@@ -106,10 +106,7 @@ ProxyUp() {
         exit 1
     fi
 
-    if ! NetworkExists proxy_network
-    then
-        NetworkCreate proxy_network
-    fi
+    NetworkCreate proxy_network
 
     printf "Starting \e[1;33mproxy\e[0m ... "
     docker-compose -p proxy -f ./compose/proxy.yml --env-file=.env up -d >> ${LOG_PATH} 2>&1
@@ -227,6 +224,8 @@ case $1 in
         ProxyUp
     ;;
     down)
+        # TODO Confirm ?
+
         ProxyDown
     ;;
     connect)

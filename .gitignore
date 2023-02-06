@@ -1,5 +1,7 @@
 /.idea
 /.env
+/volumes/acme/
+!/volumes/acme/.gitkeep
 /volumes/auth/
 !/volumes/auth/.gitkeep
 /volumes/certs/
